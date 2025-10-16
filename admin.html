@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin — Talent Hunters LK</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <h1 class="site-title">Talent Hunters LK — Admin</h1>
+  </div>
+</header>
+
+<main class="container">
+  <section id="loginSection" class="card admin-card">
+    <h2>Administrator login</h2>
+    <p class="muted">Enter credentials to manage jobs.</p>
+    <label>Username
+      <input id="username" value="" placeholder="Username">
+    </label>
+    <label>Password
+      <input id="password" type="password" value="">
+    </label>
+    <div class="row">
+      <button id="loginBtn" class="btn">Sign in</button>
+      <button id="logoutBtn" class="btn ghost" style="display:none">Logout</button>
+    </div>
+    <p class="muted">Hint: admin username and password are created during setup.</p>
+  </section>
+
+  <section id="adminPanel" class="card admin-card" style="display:none">
+    <h2>Manage Jobs</h2>
+
+    <form id="jobForm" class="job-form">
+      <label>Job title<input id="title" required></label>
+      <label>Company<input id="company" required></label>
+      <label>Location<input id="location" placeholder="e.g. New York, Remote or Colombo, Sri Lanka" required></label>
+      <label>Type
+        <select id="type">
+          <option>Remote</option>
+          <option>Onsite</option>
+          <option>Hybrid</option>
+        </select>
+      </label>
+      <label>Tech stack (comma separated)
+        <input id="tech" placeholder="e.g. Python, Airflow, AWS, SQL">
+      </label>
+      <label>Description (press Enter for new paragraphs)
+        <textarea id="description" rows="6" placeholder="Add job description here..."></textarea>
+      </label>
+      <div class="row">
+        <button type="submit" class="btn">Add / Save Job</button>
+        <button id="clearForm" type="button" class="btn ghost">Clear</button>
+      </div>
+    </form>
+
+    <h3>Existing jobs</h3>
+    <div id="jobsList"></div>
+
+    <hr>
+    <div class="row">
+      <button id="exportBtn" class="btn small">Export JSON</button>
+      <button id="importBtn" class="btn small ghost">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <button id="resetBtn" class="btn small warn">Delete All Jobs</button>
+    </div>
+  </section>
+
+  <p class="muted">Administration username: <strong>Admin9</strong> | password: <strong>J@n258</strong></p>
+</main>
+
+<footer class="container footer">
+  <small>Admin area — Talent Hunters LK</small>
+</footer>
+
+<script>
+const ADMIN_USER = 'Admin9';
+const ADMIN_PASS = 'J@n258';
+
+function show(el){ el.style.display = ''; }
+function hide(el){ el.style.display = 'none'; }
+
+function authOK(){
+  sessionStorage.setItem('th_admin', '1');
+  initAdmin();
+}
+
+function signOut(){
+  sessionStorage.removeItem('th_admin');
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('loginSection').style.display = '';
+}
+
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  if(u === ADMIN_USER && p === ADMIN_PASS){
+    authOK();
+  } else {
+    alert('Incorrect username or password.');
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=> signOut());
+
+function loadJobs(){ try{ return JSON.parse(localStorage.getItem('th_jobs')||'[]'); }catch(e){ return []; } }
+function saveJobs(jobs){ localStorage.setItem('th_jobs', JSON.stringify(jobs)); }
+
+function renderAdminJobs(){
+  const out = document.getElementById('jobsList');
+  out.innerHTML = '';
+  const jobs = loadJobs();
+  if(jobs.length === 0){ out.innerHTML = '<p class="muted">No jobs yet.</p>'; return; }
+  jobs.forEach((job, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'admin-job';
+    card.innerHTML = `
+      <div><strong>${escapeHtml(job.title)}</strong> — ${escapeHtml(job.company)} <span class="muted">(${escapeHtml(job.location)} | ${escapeHtml(job.type)})</span></div>
+      <div class="row small-gap">
+        <button class="btn tiny" data-edit="${idx}">Edit</button>
+        <button class="btn tiny ghost" data-delete="${idx}">Delete</button>
+      </div>
+    `;
+    out.appendChild(card);
+  });
+  out.querySelectorAll('[data-delete]').forEach(b=> b.addEventListener('click', e=>{
+    const idx = Number(e.currentTarget.getAttribute('data-delete'));
+    if(!confirm('Delete this job?')) return;
+    const j = loadJobs(); j.splice(idx,1); saveJobs(j); renderAdminJobs();
+  }));
+  out.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', e=>{
+    const idx = Number(e.currentTarget.getAttribute('data-edit'));
+    const jobs = loadJobs(); const job = jobs[idx];
+    document.getElementById('title').value = job.title;
+    document.getElementById('company').value = job.company;
+    document.getElementById('location').value = job.location;
+    document.getElementById('type').value = job.type;
+    document.getElementById('tech').value = job.tech || '';
+    document.getElementById('description').value = job.description || '';
+    // when saved, replace the existing by index: we will store index in dataset on form
+    document.getElementById('jobForm').dataset.editIndex = idx;
+    window.scrollTo({top:0, behavior:'smooth'});
+  }));
+}
+
+function escapeHtml(s){ return (s||'').toString().replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+function initAdmin(){
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('adminPanel').style.display = '';
+  document.getElementById('logoutBtn').style.display = '';
+  renderAdminJobs();
+}
+
+document.getElementById('jobForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const idxAttr = document.getElementById('jobForm').dataset.editIndex;
+  const job = {
+    title: document.getElementById('title').value.trim(),
+    company: document.getElementById('company').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    type: document.getElementById('type').value,
+    tech: document.getElementById('tech').value.trim(),
+    description: document.getElementById('description').value.trim()
+  };
+  const jobs = loadJobs();
+  if(typeof idxAttr !== 'undefined'){
+    const idx = Number(idxAttr);
+    jobs[idx] = job;
+    delete document.getElementById('jobForm').dataset.editIndex;
+  } else {
+    jobs.unshift(job); // newest first
+  }
+  saveJobs(jobs);
+  renderAdminJobs();
+  // update public page
+  alert('Job saved. It will appear on the job board.');
+  document.getElementById('jobForm').reset();
+});
+
+document.getElementById('clearForm').addEventListener('click', ()=>{
+  document.getElementById('jobForm').reset();
+  delete document.getElementById('jobForm').dataset.editIndex;
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const jobs = loadJobs();
+  const data = JSON.stringify(jobs, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'th_jobs_export.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const parsed = JSON.parse(r.result);
+      if(!Array.isArray(parsed)) throw new Error('Invalid file format');
+      if(!confirm('Importing will replace current jobs. Continue?')) return;
+      saveJobs(parsed);
+      renderAdminJobs();
+      alert('Imported successfully.');
+    }catch(err){ alert('Failed to import: ' + err.message); }
+  };
+  r.readAsText(f);
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Delete ALL jobs permanently?')) return;
+  saveJobs([]);
+  renderAdminJobs();
+  alert('All jobs deleted.');
+});
+
+// On load, check session
+if(sessionStorage.getItem('th_admin')) initAdmin();
+</script>
+</body>
+</html>

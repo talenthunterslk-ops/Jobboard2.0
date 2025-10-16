@@ -1,0 +1,60 @@
+/* styles.css - Talent Hunters LK */
+:root{
+  --accent: #0070f3;
+  --accent-2: #ff6b6b;
+  --muted: #666;
+  --card-shadow: 0 6px 20px rgba(20,20,20,0.06);
+  --radius: 12px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#fff;color:#000}
+.container{max-width:980px;margin:0 auto;padding:20px}
+.site-header{border-bottom:1px solid #eee;background:#fff;position:sticky;top:0;z-index:40}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+.site-title{font-size:28px;margin:0}
+.site-sub{margin:0;color:var(--muted)}
+
+/* Controls */
+.controls{display:flex;align-items:center;gap:12px;margin:18px 0}
+.search-wrap{flex:1}
+.search-wrap input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:15px}
+
+/* Jobs grid */
+.jobs-grid{display:flex;flex-direction:column;gap:16px;margin-bottom:40px}
+.job-card{background:#fff;border:1px solid #f0f0f0;padding:16px;border-radius:12px;box-shadow:var(--card-shadow)}
+.job-card-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.job-title{margin:0 0 8px;font-size:18px}
+.meta-line{color:var(--muted);font-size:13px;margin-top:4px}
+.apply-spot{display:flex;align-items:center;gap:8px}
+.apply-btn{display:inline-block;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;font-weight:600;text-decoration:none}
+.apply-btn:hover{opacity:0.95;transform:translateY(-1px)}
+
+/* Tech badges */
+.tech-stack{margin:12px 0}
+.tech{display:inline-block;padding:6px 8px;border-radius:999px;border:1px solid #eee;margin-right:6px;margin-bottom:6px;font-size:13px;background:#f7f7fb}
+
+/* Job description */
+.job-desc{color:#111;line-height:1.5;margin-top:8px;white-space:pre-wrap}
+
+/* Admin styles */
+.card{border:1px solid #f1f1f1;padding:18px;border-radius:12px;box-shadow:var(--card-shadow);background:#fff;margin-bottom:16px}
+.admin-card label{display:block;margin:8px 0;font-size:14px}
+.admin-card input, .admin-card textarea, .admin-card select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;margin-top:6px}
+
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.small-gap > * { margin-right:8px; }
+.btn{background:var(--accent);border:none;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid #ddd;color:#111}
+.btn.small{padding:6px 8px;font-size:13px}
+.btn.tiny{padding:6px 8px;font-size:12px}
+.btn.warn{background:#e02424}
+.muted{color:var(--muted)}
+.footer{padding:20px 0;color:var(--muted);text-align:center;font-size:13px}
+
+/* Responsive */
+@media (max-width:700px){
+  .header-inner{flex-direction:column;align-items:flex-start}
+  .apply-btn{padding:8px 10px}
+}

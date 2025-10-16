@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Talent Hunters LK — Job Board</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <h1 class="site-title">Talent Hunters LK</h1>
+    <p class="site-sub">IT & Tech job board</p>
+  </div>
+</header>
+
+<main class="container">
+  <section id="controls" class="controls">
+    <button id="adminBtn" class="btn small" onclick="location.href='admin.html'">Admin</button>
+    <div class="search-wrap">
+      <input id="search" placeholder="Search job title, company, tech stack or location" />
+    </div>
+  </section>
+
+  <section id="jobs" class="jobs-grid" aria-live="polite"></section>
+
+  <template id="job-template">
+    <article class="job-card">
+      <div class="job-card-top">
+        <div>
+          <h2 class="job-title"></h2>
+          <div class="meta-line">
+            <span class="company"></span> • <span class="location"></span> • <span class="type"></span>
+          </div>
+        </div>
+        <div class="apply-spot">
+          <a class="apply-btn" href="#" target="_blank" rel="noopener">Apply</a>
+        </div>
+      </div>
+
+      <div class="tech-stack" aria-hidden="false"></div>
+
+      <div class="job-desc"></div>
+    </article>
+  </template>
+
+  <p id="nojobs" class="muted">No jobs posted yet. Admin can add jobs via the <strong>Admin</strong> page.</p>
+</main>
+
+<footer class="container footer">
+  <small>Powered by Talent Hunters LK — &copy; <span id="year"></span></small>
+</footer>
+
+<script>
+const EMAIL = "talenthunters.lk@gmail.com";
+
+function nl2br(s){ return s.split('\n').map(escapeHtml).join('<br>'); }
+function escapeHtml(unsafe){ return unsafe.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+function renderJobs(jobs){
+  const jobsEl = document.getElementById('jobs');
+  jobsEl.innerHTML = '';
+  const tmpl = document.getElementById('job-template');
+  if(!jobs || jobs.length === 0){
+    document.getElementById('nojobs').style.display = 'block';
+    return;
+  }
+  document.getElementById('nojobs').style.display = 'none';
+
+  const q = (document.getElementById('search').value||'').toLowerCase();
+
+  jobs.filter(job => {
+    if(!q) return true;
+    return (job.title+ ' ' + job.company + ' ' + job.location + ' ' + (job.tech || '') + ' ' + (job.description || '')).toLowerCase().includes(q);
+  }).forEach(job => {
+    const node = tmpl.content.cloneNode(true);
+    node.querySelector('.job-title').textContent = job.title;
+    node.querySelector('.company').textContent = job.company;
+    node.querySelector('.location').textContent = job.location;
+    node.querySelector('.type').textContent = job.type;
+    node.querySelector('.job-desc').innerHTML = nl2br(job.description || '');
+    const techWrap = node.querySelector('.tech-stack');
+    if(job.tech && job.tech.trim()){
+      job.tech.split(',').map(s => s.trim()).filter(Boolean).forEach(t=>{
+        const b = document.createElement('span');
+        b.className = 'tech';
+        b.textContent = t;
+        techWrap.appendChild(b);
+      });
+    } else {
+      techWrap.style.display = 'none';
+    }
+    const applyBtn = node.querySelector('.apply-btn');
+    const subject = encodeURIComponent('Application for ' + job.title + ' at ' + job.company);
+    const body = encodeURIComponent('Hello,%0D%0A%0D%0AI would like to apply for the position of ' + job.title + '.%0D%0A%0D%0A(Please attach your resume when sending.)%0D%0A%0D%0ARegards,');
+    applyBtn.href = 'mailto:' + EMAIL + '?subject=' + subject + '&body=' + body;
+    jobsEl.appendChild(node);
+  });
+}
+
+function loadJobs(){
+  try {
+    const raw = localStorage.getItem('th_jobs');
+    return raw ? JSON.parse(raw) : [];
+  } catch(e){ return []; }
+}
+
+function saveJobs(jobs){
+  localStorage.setItem('th_jobs', JSON.stringify(jobs));
+}
+
+document.getElementById('year').textContent = new Date().getFullYear();
+document.getElementById('search').addEventListener('input', ()=> renderJobs(loadJobs()));
+renderJobs(loadJobs());
+</script>
+</body>
+</html>
